@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # This library is a simple implementation of a function to convert textual
 # numbers written in English into their integer representations.
 #
@@ -25,7 +26,7 @@
 
 import re
 
-Small = {
+smallNumbers = {
     'zero': 0,
     'one': 1,
     'two': 2,
@@ -56,7 +57,7 @@ Small = {
     'ninety': 90
 }
 
-Magnitude = {
+magnitudes = {
     'thousand':     1000,
     'million':      1000000,
     'billion':      1000000000,
@@ -74,25 +75,42 @@ class NumberException(Exception):
     def __init__(self, msg):
         Exception.__init__(self, msg)
 
-def text2num(s):
-    a = re.split(r"[\s-]+", s)
-    n = 0
-    g = 0
-    for w in a:
-        x = Small.get(w, None)
-        if x is not None:
-            g += x
-        elif w == "hundred" and g != 0:
-            g *= 100
+# input: string, list of strings, integer, list of integers
+def text2num(number):
+    if isinstance(number, list):
+      text = ' '.join([str(item) for item in number])
+    else:
+      text = str(number)
+
+    if len(text) == 0:
+        return None
+
+    words = re.split(r"[\s-]+", text)
+
+    if len(words) == 0:
+        return None
+    elif len(words) == 1:
+        try:
+            return int(float(words[0]))
+        except ValueError:
+            pass
+    total = 0
+    current = 0
+    for word in words:
+        num = smallNumbers.get(word, None)
+        if num is not None:
+            current += num
+        elif word == "hundred" and current != 0:
+            current *= 100
         else:
-            x = Magnitude.get(w, None)
-            if x is not None:
-                n += g * x
-                g = 0
+            num = magnitudes.get(word, None)
+            if num is not None:
+                total += current * num
+                current = 0
             else:
-                raise NumberException("Unknown number: "+w)
-    return n + g
-    
+                raise NumberException("Unknown number: "+word)
+    return total + current
+
 if __name__ == "__main__":
     assert 1 == text2num("one")
     assert 12 == text2num("twelve")
@@ -104,3 +122,20 @@ if __name__ == "__main__":
     assert 6400005 == text2num("six million four hundred thousand five")
     assert 123456789012 == text2num("one hundred twenty three billion four hundred fifty six million seven hundred eighty nine thousand twelve")
     assert 4000000000000000000000000000000000 == text2num("four decillion")
+
+#    print text2num("one")
+#    print text2num("twelve")
+#    print text2num("seventy two")
+#    print text2num("three hundred")
+#    print text2num("twelve hundred")
+#    print text2num("twelve thousand three hundred four")
+#    print text2num("six million")
+#    print text2num("six million four hundred thousand five")
+#    print text2num("one hundred twenty three billion four hundred fifty six million seven hundred eighty nine thousand twelve")
+#    print text2num("four decillion")
+    print text2num(["one", "hundred", "twenty", "three"])
+    print text2num("one hundred twenty three")
+    print text2num("123")
+    print text2num(["123"])
+    print text2num(123)
+    print text2num([123])
